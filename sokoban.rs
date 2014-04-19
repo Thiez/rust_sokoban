@@ -1,3 +1,7 @@
+#![crate_id = "rust_sokoban"]
+#![crate_type = "bin"]
+#![license = "MIT"]
+
 #![allow(unused_must_use)]
 
 extern crate native;
@@ -30,11 +34,8 @@ fn main() {
 
   let board: SokoBoard = FromStr::from_str( contents.unwrap() )
             .expect("Invalid sokoban board");
-  println!("The screen:\n{}\nEnd of screen.", board);
 
   let annotated = SokoAnnotatedBoard::fromSokoBoard(board);
-  annotated.showReachable();
-  annotated.showProductive();
   do_sylvan(&annotated);
 }
 

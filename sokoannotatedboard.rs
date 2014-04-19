@@ -1,11 +1,14 @@
 use super::bdd::{Bdd};
 use super::sokoboard::{SokoBoard, Field, Block, Man, Wall, Goal, BlockOnGoal, ManOnGoal};
 
+/// Represents a sokoban playing field. The individual squares are annotated
+/// with some data that is gathered at initialization.
 pub struct SokoAnnotatedBoard {
   board: ~[~[AnnotatedField]],
 }
 
 impl SokoAnnotatedBoard {
+  /// Creates a SokoAnnotatedBoard using a Sokoboard.
   pub fn fromSokoBoard(board: SokoBoard) -> SokoAnnotatedBoard {
     let SokoBoard(board) = board;
     let mut newBoard = Vec::new();
@@ -27,6 +30,10 @@ impl SokoAnnotatedBoard {
     result
   }
 
+  /*
+  /// Prints a representation of the squares that have been identified as 'productive';
+  /// that is, all squares that coudl contain a box without the game becomming
+  /// unsolvable.
   pub fn showProductive(&self) {
     use super::std::strbuf::StrBuf;
     for row in self.board.iter() {
@@ -36,8 +43,10 @@ impl SokoAnnotatedBoard {
       }
       println!("{}",sb.as_slice());
     }
-  }
+  }*/
 
+  /*
+  /// Prints a representation of the squares that are reachable by the man
   pub fn showReachable(&self) {
     use super::std::strbuf::StrBuf;
     for row in self.board.iter() {
@@ -47,11 +56,17 @@ impl SokoAnnotatedBoard {
       }
       println!("{}",sb.as_slice());
     }
-  }
+  }*/
 }
 
 #[deriving(Eq)]
-pub struct AnnotatedField {
+/// An annotated field.
+/// The pair (`row`,`col`) represent this field's coordinates w.r.t. the playing field.
+/// `reachable` is `true` if this square is reachable
+/// `productive` is `true` if this square is productive
+/// `man_id` is a unique id for the property of the man being or not being in this square
+/// `block_id` is a unique id for the property of a block being or not being in this square
+struct AnnotatedField {
   field: Field,
   row: uint,
   col: uint,
@@ -172,13 +187,6 @@ fn assignIDs(soko: &mut SokoAnnotatedBoard) {
       id += 2;
     }
   }
-}
-
-fn sylvan_init() {
-  unsafe {
-    super::raw::raw_init();
-  }
-  println!("Init sylvan");
 }
 
 fn block_var_at(fields: &[~[AnnotatedField]], row: uint, col: uint) -> u32 {
@@ -448,6 +456,14 @@ fn solve_the_puzzle(initial: Bdd, transitions: Bdd, goal: Bdd, fields: &[~[Annot
   }
 }
 
+/// Initializes sylvan, our bdd-library
+fn sylvan_init() {
+  unsafe {
+    super::raw::raw_init();
+  }
+}
+
+/// Explores the puzzle using sylvan, and prints the solution.
 pub fn do_sylvan(soko: &SokoAnnotatedBoard) {
   sylvan_init();
   let fields = soko.board.as_slice();
