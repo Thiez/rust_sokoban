@@ -5,8 +5,10 @@ use raw::{sylvan_and,sylvan_xor,sylvan_or,sylvan_nand,
           sylvan_less,sylvan_invimp};
 use raw::{sylvan_not};
 use raw::{sylvan_ithvar};
+use raw::{sylvan_true, sylvan_false};
+use raw::{sylvan_relprods, sylvan_relprods_reversed};
 
-struct Bdd(BDD);
+pub struct Bdd(BDD);
 
 fn unpack(a: &Bdd, b: Bdd) -> (BDD,BDD) {
   let (Bdd(a),Bdd(b)) = (*a,b);
@@ -62,6 +64,14 @@ impl Bdd {
     unsafe {
       Bdd(sylvan_ithvar(id))
     }
+  }
+
+  pub fn bddTrue() -> Bdd {
+    Bdd(sylvan_true)
+  }
+
+  pub fn bddFalse() -> Bdd {
+    Bdd(sylvan_false)
   }
 
   pub fn low(&self) -> Bdd {
@@ -151,5 +161,25 @@ impl Bdd {
     unsafe {
       Bdd(sylvan_invimp(a,b))
     }
+  }
+
+  pub fn relprods(&self, transitions: Bdd, allvars: Bdd) -> Bdd {
+    let (current,trans) = unpack(self, transitions);
+    let Bdd(vars) = allvars;
+    unsafe {
+      Bdd( sylvan_relprods(current, trans, vars) )
+    }
+  }
+
+  pub fn relprods_reversed(&self, transitions: Bdd, allvars: Bdd) -> Bdd {
+    let (current,trans) = unpack(self, transitions);
+    let Bdd(vars) = allvars;
+    unsafe {
+      Bdd( sylvan_relprods_reversed(current,trans,vars) )
+    }
+  }
+
+  pub fn relprods_equalize(&self, transitions: Bdd, allvars: Bdd, equalizer: Bdd) -> Bdd {
+    self.relprods(transitions,allvars).relprods_reversed(equalizer,allvars)
   }
 }

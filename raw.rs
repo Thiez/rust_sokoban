@@ -80,12 +80,12 @@ extern {
   pub fn sylvan_pathcount(bdd: BDD) -> f64;
 
   pub fn sylvan_nodecount(a: BDD) -> size_t;
-  
+
 }
 
 pub unsafe fn raw_init() {
   lace_init(1,100000,0);
-  sylvan_init(23,20,2);
+  sylvan_init(26,22,2);
 }
 
 

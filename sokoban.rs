@@ -1,37 +1,21 @@
-#![no_uv]
 #![allow(unused_must_use)]
 
 extern crate native;
 extern crate libc;
 
 use std::from_str::{FromStr};
-use std::io::{File, Writer};
-use std::io::stdio::{stdin, stdout, stderr};
+use std::io::{File};
+use std::io::stdio::{stdin};
 use std::path::{Path};
 use std::os;
 
-use sokoboard::{SokoBoard, Field};
-use sokoannotatedboard::{SokoAnnotatedBoard, AnnotatedField};
+use sokoboard::{SokoBoard};
+use sokoannotatedboard::{SokoAnnotatedBoard, do_sylvan};
 
 mod raw;
 mod bdd;
 mod sokoboard;
 mod sokoannotatedboard;
-
-
-#[start]
-fn start(argc: int, argv: **u8) -> int {
-  native::start(argc,argv,proc(){
-      main()
-  })
-}
-
-fn init() {
-  unsafe {
-    raw::raw_init();
-  }
-  println!("Init sylvan");
-}
 
 fn main() {
   let args = os::args();
@@ -48,9 +32,9 @@ fn main() {
             .expect("Invalid sokoban board");
   println!("The screen:\n{}\nEnd of screen.", board);
 
-  init();
-
   let annotated = SokoAnnotatedBoard::fromSokoBoard(board);
-
+  annotated.showReachable();
+  annotated.showProductive();
+  do_sylvan(&annotated);
 }
 

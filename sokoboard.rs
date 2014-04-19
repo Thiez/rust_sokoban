@@ -32,8 +32,8 @@ impl FromStr for SokoBoard {
 
 impl fmt::Show for SokoBoard {
   fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-    let &SokoBoard(ref cols) = self;
-    for row in cols.iter() {
+    let &SokoBoard(ref rows) = self;
+    for row in rows.iter() {
       for field in row.iter() {
         field.fmt(fmt);
       }
