@@ -1,0 +1,3 @@
+[submodule "sylvan"]
+	path = sylvan
+	url = http://fmt.cs.utwente.nl/tools/scm/sylvan.git
