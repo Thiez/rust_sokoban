@@ -16,7 +16,7 @@ extern {
   pub fn sylvan_quit();
   pub fn sylvan_ithvar(var: BDDVAR) -> BDD;
   pub fn sylvan_nithvar(var: BDDVAR) -> BDD;
-  pub fn sylvan_cube(variables: *BDDVAR, count: size_t, cube: *mut u8) -> BDD;
+  pub fn sylvan_cube(variables: *const BDDVAR, count: size_t, cube: *mut u8) -> BDD;
   pub fn sylvan_bdd_to_nocomp(bdd: BDD) -> BDD;
   pub fn sylvan_var(bdd: BDD) -> BDDVAR;
   pub fn sylvan_low(bdd: BDD) -> BDD;
@@ -67,7 +67,7 @@ extern {
   pub fn sylvan_set_next(set: BDDSET) -> BDDSET;
   pub fn sylvan_set_count(set: BDDSET) -> size_t;
   pub fn sylvan_set_toarray(set: BDDSET, arr: *mut BDDVAR);
-  pub fn sylvan_set_fromarray(arr: *BDDVAR, length: size_t);
+  pub fn sylvan_set_fromarray(arr: *const BDDVAR, length: size_t);
 
   pub fn sylvan_makenode(level: BDDVAR, low: BDD, high: BDD) -> BDD;
 
@@ -76,7 +76,7 @@ extern {
   pub fn sylvan_print(bdd: BDD);
 
   pub fn sylvan_satcount(bdd: BDD, variables: BDD) -> f64;
-  pub fn sylvan_sat_one(bdd: BDD, variable: *BDDVAR, count: size_t, str: *u8) -> c_int;
+  pub fn sylvan_sat_one(bdd: BDD, variable: *const BDDVAR, count: size_t, str: *const u8) -> c_int;
   pub fn sylvan_pathcount(bdd: BDD) -> f64;
 
   pub fn sylvan_nodecount(a: BDD) -> size_t;

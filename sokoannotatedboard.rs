@@ -4,7 +4,7 @@ use super::sokoboard::{SokoBoard, Field, Block, Man, Wall, Goal, BlockOnGoal, Ma
 /// Represents a sokoban playing field. The individual squares are annotated
 /// with some data that is gathered at initialization.
 pub struct SokoAnnotatedBoard {
-  board: ~[~[AnnotatedField]],
+  board: Vec<Vec<AnnotatedField>>,
 }
 
 impl SokoAnnotatedBoard {
@@ -17,7 +17,7 @@ impl SokoAnnotatedBoard {
       for col in range(0, board[row].len()) {
         newRow.push( AnnotatedField::new( board[row][col], row, col ) );
       }
-      newBoard.push(newRow.move_iter().collect::<~[AnnotatedField]>());
+      newBoard.push(newRow.move_iter().collect::<Vec<AnnotatedField>>());
     }
 
     let mut result = SokoAnnotatedBoard{
@@ -59,7 +59,7 @@ impl SokoAnnotatedBoard {
   }*/
 }
 
-#[deriving(Eq)]
+#[derive(Eq)]
 /// An annotated field.
 /// The pair (`row`,`col`) represent this field's coordinates w.r.t. the playing field.
 /// `reachable` is `true` if this square is reachable
@@ -108,13 +108,13 @@ impl AnnotatedField {
   }
 }
 
-fn valid_index<T>(row: uint, col:uint, fields: &[~[T]]) -> bool {
+fn valid_index<T>(row: uint, col:uint, fields: &[Vec<T>]) -> bool {
   row < fields.len() && col < fields[row].len()
 }
 
 fn reachability(soko: &mut SokoAnnotatedBoard) {
 
-  fn visit(board: &mut [~[AnnotatedField]], row: uint, col: uint) {
+  fn visit(board: &mut [Vec<AnnotatedField>], row: uint, col: uint) {
     if !(board[row][col].reachable || board[row][col].field == Wall) {
       board[row][col].reachable = true;
       visit(board, row+1, col);
@@ -136,7 +136,7 @@ fn reachability(soko: &mut SokoAnnotatedBoard) {
 
 fn productivity(soko: &mut SokoAnnotatedBoard) {
 
-  fn check_productive(row: uint, col: uint, dr: uint, dc: uint, fields: &mut [~[AnnotatedField]]) -> bool {
+  fn check_productive(row: uint, col: uint, dr: uint, dc: uint, fields: &mut [Vec<AnnotatedField>]) -> bool {
     if valid_index(row,col,fields)
         && fields[row][col].reachable
         && valid_index(row+dr, col+dc, fields)
@@ -170,7 +170,7 @@ fn sanityCheck(soko: &SokoAnnotatedBoard) {
   for row in soko.board.iter() {
     for field in row.iter() {
       if !field.productive && field.hasBlock() {
-        fail!(format!("Impossible puzzle: Block on unproductive spot: [{},{}]",field.row,field.col))
+        panic!(format!("Impossible puzzle: Block on unproductive spot: [{},{}]",field.row,field.col))
       }
     }
   }
@@ -189,15 +189,15 @@ fn assignIDs(soko: &mut SokoAnnotatedBoard) {
   }
 }
 
-fn block_var_at(fields: &[~[AnnotatedField]], row: uint, col: uint) -> u32 {
+fn block_var_at(fields: &[Vec<AnnotatedField>], row: uint, col: uint) -> u32 {
   fields[row][col].block_id.expect("Field without block_id!")
 }
 
-fn man_var_at(fields: &[~[AnnotatedField]], row: uint, col: uint) -> u32 {
+fn man_var_at(fields: &[Vec<AnnotatedField>], row: uint, col: uint) -> u32 {
   fields[row][col].man_id.expect("Field without man_id!")
 }
 
-fn to_bdd_init(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_init(fields: &[Vec<AnnotatedField>]) -> Bdd {
   let mut result = Bdd::bddTrue();
   for row in fields.iter() {
     for field in row.iter() {
@@ -222,17 +222,17 @@ fn to_bdd_init(fields: &[~[AnnotatedField]]) -> Bdd {
   result
 }
 
-fn same_man(fields: &[~[AnnotatedField]], row: uint, col: uint) -> Bdd {
+fn same_man(fields: &[Vec<AnnotatedField>], row: uint, col: uint) -> Bdd {
   let mva = man_var_at(fields,row,col);
   Bdd::fromId(mva).biimp( Bdd::fromId(mva+1) )
 }
 
-fn same_block(fields: &[~[AnnotatedField]], row: uint, col: uint) -> Bdd {
+fn same_block(fields: &[Vec<AnnotatedField>], row: uint, col: uint) -> Bdd {
   let bva = block_var_at(fields,row,col);
   Bdd::fromId(bva).biimp( Bdd::fromId(bva+1) )
 }
 
-fn everything_else_same(fields: &[~[AnnotatedField]], except: &[(uint, uint)]) -> Bdd {
+fn everything_else_same(fields: &[Vec<AnnotatedField>], except: &[(uint, uint)]) -> Bdd {
   let mut result = Bdd::bddTrue();
   let mut excepts = 0;
   for row in range(0,fields.len()) {
@@ -249,11 +249,11 @@ fn everything_else_same(fields: &[~[AnnotatedField]], except: &[(uint, uint)]) -
       }
     }
   }
-  assert_eq!(excepts, except.len())
+  assert_eq!(excepts, except.len());
   result
 }
 
-fn to_bdd_transitions(row: uint, col: uint, dr: uint, dc: uint, fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_transitions(row: uint, col: uint, dr: uint, dc: uint, fields: &[Vec<AnnotatedField>]) -> Bdd {
   if valid_index(row,col,fields)
       && fields[row][col].reachable
       && valid_index(row+dr,col+dc,fields)
@@ -315,7 +315,7 @@ fn to_bdd_transitions(row: uint, col: uint, dr: uint, dc: uint, fields: &[~[Anno
   }
 }
 
-fn to_bdd_trans_direction(fields: &[~[AnnotatedField]], drow: uint, dcol: uint) -> Bdd {
+fn to_bdd_trans_direction(fields: &[Vec<AnnotatedField>], drow: uint, dcol: uint) -> Bdd {
   let mut result = Bdd::bddFalse();
   for row in fields.iter() {
     for field in row.iter() {
@@ -327,23 +327,23 @@ fn to_bdd_trans_direction(fields: &[~[AnnotatedField]], drow: uint, dcol: uint) 
   result
 }
 
-fn to_bdd_trans_up(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_trans_up(fields: &[Vec<AnnotatedField>]) -> Bdd {
   to_bdd_trans_direction(fields, -1, 0)
 }
 
-fn to_bdd_trans_down(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_trans_down(fields: &[Vec<AnnotatedField>]) -> Bdd {
   to_bdd_trans_direction(fields, 1, 0)
 }
 
-fn to_bdd_trans_left(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_trans_left(fields: &[Vec<AnnotatedField>]) -> Bdd {
   to_bdd_trans_direction(fields, 0, -1)
 }
 
-fn to_bdd_trans_right(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_trans_right(fields: &[Vec<AnnotatedField>]) -> Bdd {
   to_bdd_trans_direction(fields, 0, 1)
 }
 
-fn to_bdd_goal(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_goal(fields: &[Vec<AnnotatedField>]) -> Bdd {
   let mut result = Bdd::bddTrue();
   for row in fields.iter() {
     for field in row.iter() {
@@ -355,7 +355,7 @@ fn to_bdd_goal(fields: &[~[AnnotatedField]]) -> Bdd {
   result
 }
 
-fn to_bdd_trans(fields: &[~[AnnotatedField]]) -> Bdd {
+fn to_bdd_trans(fields: &[Vec<AnnotatedField>]) -> Bdd {
   let up = to_bdd_trans_up(fields);
   let down = to_bdd_trans_down(fields);
   let left = to_bdd_trans_left(fields);
@@ -363,7 +363,7 @@ fn to_bdd_trans(fields: &[~[AnnotatedField]]) -> Bdd {
   up | down | left | right
 }
 
-fn all_vars(fields: &[~[AnnotatedField]]) -> Bdd {
+fn all_vars(fields: &[Vec<AnnotatedField>]) -> Bdd {
   let mut result = Bdd::bddFalse();
   for row in fields.iter() {
     for field in row.iter() {
@@ -380,7 +380,7 @@ fn all_vars(fields: &[~[AnnotatedField]]) -> Bdd {
   result
 }
 
-fn reconstruct_path(visited: Vec<Bdd>, goal: Bdd, equalizer: Bdd, fields: &[~[AnnotatedField]]) {
+fn reconstruct_path(visited: Vec<Bdd>, goal: Bdd, equalizer: Bdd, fields: &[Vec<AnnotatedField>]) {
   use super::std::strbuf::StrBuf;
   let allvars = all_vars(fields);
   let mut current = goal;
@@ -412,7 +412,7 @@ fn reconstruct_path(visited: Vec<Bdd>, goal: Bdd, equalizer: Bdd, fields: &[~[An
       path.push_char('r');
       right
     } else {
-      fail!("Backtracking error");
+      panic!("Backtracking error");
     };
   }
   println!("Solution: {}", path
@@ -422,7 +422,7 @@ fn reconstruct_path(visited: Vec<Bdd>, goal: Bdd, equalizer: Bdd, fields: &[~[An
       .as_slice());
 }
 
-fn solve_the_puzzle(initial: Bdd, transitions: Bdd, goal: Bdd, fields: &[~[AnnotatedField]]) {
+fn solve_the_puzzle(initial: Bdd, transitions: Bdd, goal: Bdd, fields: &[Vec<AnnotatedField>]) {
   fn won(current: Bdd, goal: Bdd) -> bool {
     current & goal != Bdd::bddFalse()
   }
@@ -452,7 +452,7 @@ fn solve_the_puzzle(initial: Bdd, transitions: Bdd, goal: Bdd, fields: &[~[Annot
   } else {
     println!("Fail in {} steps", i);
     println!("no solution");
-    fail!()
+    panic!()
   }
 }
 

@@ -1,10 +1,8 @@
-#![crate_id = "rust_sokoban"]
 #![crate_type = "bin"]
-#![license = "MIT"]
 
 #![allow(unused_must_use)]
 
-extern crate native;
+//extern crate native;
 extern crate libc;
 
 use std::from_str::{FromStr};

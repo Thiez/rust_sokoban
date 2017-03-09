@@ -1,14 +1,14 @@
 use std::fmt;
 use std::from_str::{FromStr};
 
-pub struct SokoBoard( pub ~[~[Field]] );
+pub struct SokoBoard( pub Vec<Vec<Field>> );
 
 impl FromStr for SokoBoard {
   fn from_str(s: &str) -> Option<SokoBoard> {
     use std::cmp::max;
-    let lines: ~[&str] = s.lines().collect();
+    let lines: Vec<&str> = s.lines().collect();
     let rows = lines.len();
-    let cols = lines.iter().fold(0u,|maxL, row| max(maxL,row.len()));
+    let cols = lines.iter().fold(0usize, |maxL, row| max(maxL,row.len()));
     if rows == 0 || cols == 0 {
       None
     } else {
@@ -23,7 +23,7 @@ impl FromStr for SokoBoard {
         while row.len() < cols {
           row.push(Empty);
         }
-        result.push(row.move_iter().collect::<~[Field]>());
+        result.push(row.move_iter().collect::<Vec<_>>());
       }
       Some(SokoBoard(result.move_iter().collect()))
     }
@@ -43,7 +43,7 @@ impl fmt::Show for SokoBoard {
   }
 }
 
-#[deriving(Eq)]
+#[derive(Eq)]
 pub enum Field {
   Empty,
   Wall,
